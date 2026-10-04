@@ -10,6 +10,7 @@
         --bg-mid:#eef8ff;
         --cyan:#0096c7;
         --cyan-soft:rgba(0,150,199,0.35);
+        --accent-rgb:0,150,199;
         --gold:#e8a93d;
         --text-strong:#0f2544;
         --text-dim:rgba(15,37,68,0.5);
@@ -22,7 +23,10 @@
         --video-box-width:1180px;
         --video-box-height:79vh;
         --qr-box-width:760px;
-        --transcript-font-scale:1;
+        --transcript-font-scale:0.7;
+        --toc-base:280px;
+        --toc-bg:rgba(255,255,255,.30);
+        --toc-halo:transparent;
     }
     *{box-sizing:border-box;}
     body{
@@ -66,36 +70,58 @@
     }
     .fullscreen-btn:hover{
         background:var(--cyan); color:#fff;
-        box-shadow:0 0 15px rgba(0,150,199,.4);
+        box-shadow:0 0 15px rgba(var(--accent-rgb),.4);
     }
 
+    /* ===== Layout KAK & IKP: PDF penuh (before) -> klik tab -> daftar isi transparan geser masuk (after) ===== */
     .main-layout{
-        display:grid; grid-template-columns:1fr 1fr; gap:30px;
+        --toc-w:min(var(--toc-base), 86%);
+        position:relative; display:block;
         width:100%; margin-bottom:30px;
+        padding-right:34px; /* jalur kosong buat tab « di kanan PDF */
     }
-    @media (max-width:900px){ .main-layout{ grid-template-columns:1fr; } }
 
     .pdf-container{
+        position:relative;
         background:var(--card-bg-solid); border-radius:12px; padding:8px;
-        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(0,150,199,.15);
+        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(var(--accent-rgb),.15);
         overflow:hidden;
     }
     .pdf-container iframe{
-        width:100%; height:65vh; border:none; border-radius:6px; display:block;
+        width:100%; height:85vh; border:none; border-radius:6px; display:block;
     }
     .pdf-fallback{
         display:none; align-items:center; justify-content:center;
-        min-height:65vh; color:#333; font-size:14px; text-align:center; padding:20px;
+        min-height:85vh; color:#333; font-size:14px; text-align:center; padding:20px;
     }
+    .toc-toggle{
+        position:absolute; z-index:6; top:50%; right:0; transform:translateY(-50%);
+        width:30px; height:96px; border:1px solid var(--cyan-soft); border-radius:12px;
+        background:rgba(255,255,255,.35); color:var(--text-strong); font-size:22px; line-height:1;
+        cursor:pointer; box-shadow:0 3px 12px rgba(15,37,68,.12);
+        backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+        transition:right .45s cubic-bezier(.4,0,.2,1), background .2s ease, color .2s ease;
+    }
+    .toc-toggle:hover{ background:var(--cyan); color:#fff; }
+    .main-layout:not(.toc-collapsed) .toc-toggle{ right:var(--toc-w); }
 
     .transcript-container{
-        background:var(--card-bg);
+        position:absolute; z-index:5; top:0; bottom:0; right:0;
+        width:var(--toc-w);
+        background:var(--toc-bg);
         border:1px solid var(--cyan-soft);
-        border-radius:12px; padding:25px;
-        backdrop-filter:blur(10px);
+        border-radius:12px; padding:16px;
         display:flex; flex-direction:column; gap:16px;
-        height:65vh; overflow-y:auto;
-        box-shadow:0 10px 30px rgba(15,37,68,.08);
+        overflow-y:auto;
+        backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+        will-change:transform;
+        box-shadow:0 8px 28px rgba(15,37,68,.12);
+        transition:transform .45s cubic-bezier(.4,0,.2,1), opacity .35s ease, visibility 0s linear 0s;
+    }
+    .main-layout.toc-collapsed .transcript-container{
+        transform:translateX(calc(100% + 40px)); opacity:0; visibility:hidden;
+        pointer-events:none;
+        transition:transform .45s cubic-bezier(.4,0,.2,1), opacity .35s ease, visibility 0s linear .45s;
     }
     .transcript-container::-webkit-scrollbar{ width:6px; }
     .transcript-container::-webkit-scrollbar-thumb{ background:var(--cyan-soft); border-radius:6px; }
@@ -113,7 +139,7 @@
         cursor:pointer;
     }
     .transcript-line:hover{
-        background:rgba(0,150,199,.08);
+        background:rgba(var(--accent-rgb),.08);
     }
     .transcript-line strong{ color:inherit; }
     .transcript-line.active{
@@ -133,7 +159,7 @@
     }
     .toc-title:hover, .toc-title.tts-speaking{
         color:var(--cyan);
-        background:rgba(0,150,199,.08);
+        background:rgba(var(--accent-rgb),.08);
     }
     .toc-section{
         font-size:calc(17px * var(--transcript-font-scale)); line-height:1.55;
@@ -158,7 +184,7 @@
     .toc-section:hover, .toc-sub:hover, .toc-subsub:hover,
     .toc-section.tts-speaking, .toc-sub.tts-speaking, .toc-subsub.tts-speaking{
         color:var(--cyan);
-        background:rgba(0,150,199,.08);
+        background:rgba(var(--accent-rgb),.08);
     }
     .toc-title.tts-speaking, .toc-section.tts-speaking, .toc-sub.tts-speaking, .toc-subsub.tts-speaking{
         border-left:3px solid var(--cyan);
@@ -171,81 +197,65 @@
         50% { box-shadow:-2px 0 16px 1px var(--cyan); }
     }
 
-    .audio-player-container{
-        background:var(--card-bg);
-        border:1px solid var(--cyan-soft);
-        padding:18px 22px; border-radius:24px;
-        width:100%; backdrop-filter:blur(15px);
-        display:flex; flex-direction:column; gap:14px;
-        box-shadow:0 10px 30px rgba(15,37,68,.15);
+    .voice-panel{ flex-shrink:0; border:0; background:transparent; }
+    .voice-panel.expanded{
+        background:rgba(255,255,255,.42);
+        box-shadow:0 5px 16px rgba(15,37,68,.08);
     }
-    .player-controls{
-        display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap;
+    .voice-panel-toggle{
+        width:100%; min-height:38px; padding:8px 11px; border:0;
+        display:flex; align-items:center; justify-content:space-between; gap:10px;
+        color:var(--text-strong); background:transparent; cursor:pointer; text-align:left;
     }
-    .play-btn{
-        background:rgba(0,150,199,.18); border:2px solid var(--cyan);
-        border-radius:50%; width:50px; height:50px;
-        display:flex; align-items:center; justify-content:center;
-        cursor:pointer; transition:all .3s ease; flex-shrink:0;
-        box-shadow:0 0 0 rgba(0,150,199,0);
+    .voice-panel-toggle:hover{ background:rgba(var(--accent-rgb),.06); }
+    .voice-panel-label{ font-size:12px; font-weight:700; }
+    .voice-panel-summary{
+        min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        color:var(--text-dim); font-size:11px;
     }
-    .play-btn:hover{
-        background:var(--cyan); box-shadow:0 0 25px rgba(0,150,199,.5);
-        transform:scale(1.05);
+    .voice-panel-chevron{ flex-shrink:0; font-size:14px; transition:transform .2s ease; }
+    .voice-panel.expanded .voice-panel-chevron{ transform:rotate(180deg); }
+    .voice-panel-body{
+        display:none; padding:0 12px 11px; flex-direction:column; gap:8px;
     }
-    .icon-control{
-        width:0; height:0; border-top:9px solid transparent; border-bottom:9px solid transparent;
-        border-left:15px solid var(--text-strong); margin-left:5px; transition:all .2s ease;
+    .voice-panel.expanded .voice-panel-body{ display:flex; }
+    .voice-controls{ display:flex; align-items:center; gap:9px; min-width:0; }
+    .voice-play-btn{
+        width:32px; height:32px; flex-shrink:0; border:1px solid var(--cyan-soft);
+        border-radius:50%; background:rgba(255,255,255,.12); color:var(--text-strong);
+        font-size:13px; cursor:pointer;
     }
-    .icon-control.playing{
-        width:5px; height:14px; border-top:none; border-bottom:none;
-        border-left:5px solid var(--text-strong); border-right:5px solid var(--text-strong); margin-left:0;
+    .voice-play-btn:hover{ background:var(--cyan); color:#fff; }
+    .voice-speed{
+        flex-shrink:0; padding:5px 7px; border:1px solid rgba(15,37,68,.15);
+        border-radius:8px; background:rgba(255,255,255,.12); color:var(--text-strong);
+        font-size:11px;
     }
-    .progress-box{ display:flex; align-items:center; gap:12px; flex-grow:1; min-width:220px; }
-    .time-text{ font-size:12px; color:#5b6b82; font-family:monospace; white-space:nowrap; }
-    .time-text.section-label{
-        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color:var(--text-dim); white-space:normal; flex-shrink:1; min-width:0;
-        overflow:hidden; text-overflow:ellipsis; display:-webkit-box;
-        -webkit-line-clamp:1; -webkit-box-orient:vertical;
+    .voice-seek-meta{
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+        min-width:0; font-size:12px; color:var(--text-dim);
     }
-    .progress-bar{
-        width:100%; height:6px; border-radius:10px;
-        background:rgba(15,37,68,.12); overflow:hidden; flex-shrink:0; min-width:60px;
+    .voice-seek-count{ flex-shrink:0; font-family:monospace; }
+    .voice-seek-title{
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        color:var(--text-strong); font-weight:600;
     }
-    .progress-fill{
-        height:100%; width:0%; background:var(--cyan);
-        border-radius:10px; transition:width .3s ease;
+    .voice-seek-slider{
+        width:100%; height:4px; margin:2px 0; border-radius:99px;
+        background:rgba(15,37,68,.16); cursor:pointer; accent-color:var(--cyan);
+        opacity:.62;
     }
-    .speed-selector{
-        background:var(--card-bg); border:1px solid rgba(15,37,68,.15);
-        color:var(--text-strong); padding:8px 14px; border-radius:30px; font-size:13px;
-        font-weight:600; cursor:pointer; outline:none;
+    .voice-seek-slider:hover, .voice-seek-slider:focus-visible{ opacity:1; }
+    .voice-seek-slider::-webkit-slider-thumb{
+        width:13px; height:13px; border:2px solid rgba(255,255,255,.85);
+        border-radius:50%; background:var(--cyan); box-shadow:0 1px 5px rgba(15,37,68,.25);
+        -webkit-appearance:none; appearance:none;
     }
-    .speed-selector option{ background:#fff; color:var(--text-strong); }
-
-    .visualizer-container{ display:flex; align-items:flex-end; gap:3px; height:22px; padding:0 6px; }
-    .bar{
-        width:3px; background:linear-gradient(to top, var(--cyan), var(--gold)); border-radius:3px;
-        height:6px; animation:tts-pulse .9s ease-in-out infinite; animation-play-state:paused;
+    .voice-seek-slider::-moz-range-thumb{
+        width:10px; height:10px; border:2px solid rgba(255,255,255,.85);
+        border-radius:50%; background:var(--cyan); box-shadow:0 1px 5px rgba(15,37,68,.25);
     }
-    .bar:nth-child(1){ animation-delay:0s; }
-    .bar:nth-child(2){ animation-delay:.1s; }
-    .bar:nth-child(3){ animation-delay:.2s; }
-    .bar:nth-child(4){ animation-delay:.3s; }
-    .bar:nth-child(5){ animation-delay:.15s; }
-    .bar:nth-child(6){ animation-delay:.25s; }
-    .bar:nth-child(7){ animation-delay:.05s; }
-    .bar:nth-child(8){ animation-delay:.35s; }
-    @keyframes tts-pulse{
-        0%, 100% { height:6px; }
-        50% { height:22px; }
-    }
-
-    .hint{
-        font-size:12px; color:var(--hint-color); text-align:center; max-width:720px;
-        margin-top:-8px; line-height:1.5;
-    }
+    .voice-seek-hint{ font-size:11px; color:var(--text-dim); line-height:1.35; }
 
     .theme-picker{
         display:flex; align-items:center; gap:8px;
@@ -262,6 +272,7 @@
         transition:transform .15s ease;
         padding:0; flex-shrink:0;
     }
+    .theme-swatch.swatch-white{ border-color:#c3c9d1; }
     .theme-swatch:hover{ transform:scale(1.15); }
     .theme-swatch.selected{ border-color:var(--text-strong); }
     .mode-toggle{ display:flex; gap:3px; margin-right:4px; }
@@ -270,7 +281,7 @@
         background:rgba(255,255,255,.6); cursor:pointer; font-size:11px;
         display:flex; align-items:center; justify-content:center; padding:0;
     }
-    .mode-btn.active{ background:var(--cyan); box-shadow:0 0 6px rgba(0,150,199,.5); }
+    .mode-btn.active{ background:var(--cyan); box-shadow:0 0 6px rgba(var(--accent-rgb),.5); }
     .theme-custom-wrap{
         width:20px; height:20px; border-radius:50%; overflow:hidden;
         border:2px solid rgba(255,255,255,.9); cursor:pointer; flex-shrink:0;
@@ -305,7 +316,7 @@
     }
     .video-intro-box{
         background:var(--card-bg-solid); border-radius:16px; padding:10px;
-        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(0,150,199,.15);
+        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(var(--accent-rgb),.15);
         width:100%; max-width:var(--video-box-width); overflow:hidden;
         display:flex; align-items:center; justify-content:center;
         position:relative; z-index:501;
@@ -341,7 +352,7 @@
     }
     .qr-box{
         background:var(--card-bg-solid); border-radius:16px; padding:40px 48px;
-        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(0,150,199,.15);
+        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(var(--accent-rgb),.15);
         width:100%; max-width:var(--qr-box-width); overflow:hidden;
         display:flex; flex-direction:column; align-items:center; gap:18px;
         text-align:center;
@@ -528,7 +539,7 @@
 
     .pdf-view-box{
         background:var(--card-bg-solid); border-radius:16px; padding:16px;
-        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(0,150,199,.15);
+        box-shadow:0 20px 50px rgba(15,37,68,.18), 0 0 30px rgba(var(--accent-rgb),.15);
         width:100%; max-width:1300px;
         display:flex; flex-direction:column; gap:10px;
     }
@@ -566,16 +577,18 @@
                 <button class="mode-btn" id="modeDark" onclick="setThemeMode('dark')" title="Mode Gelap">☾</button>
             </div>
             <span></span>
-            <button class="theme-swatch selected" data-color="#0096c7" style="background:#0096c7" title="Biru Muda" onclick="applyThemeFromAccent('#0096c7', this)"></button>
-            <button class="theme-swatch" data-color="#2a9d8f" style="background:#2a9d8f" title="Hijau Mint" onclick="applyThemeFromAccent('#2a9d8f', this)"></button>
+            <button class="theme-swatch swatch-white selected" data-color="#ffffff" style="background:#ffffff" title="Putih (Gelap = Hitam)" onclick="applyThemeFromAccent('#ffffff', this)"></button>
+            <button class="theme-swatch" data-color="#64748b" style="background:#64748b" title="Abu Slate" onclick="applyThemeFromAccent('#64748b', this)"></button>
+            <button class="theme-swatch" data-color="#a8324a" style="background:#a8324a" title="Merah Mawar" onclick="applyThemeFromAccent('#a8324a', this)"></button>
+            <button class="theme-swatch" data-color="#e07a5f" style="background:#e07a5f" title="Terakota Peach" onclick="applyThemeFromAccent('#e07a5f', this)"></button>
+            <button class="theme-swatch" data-color="#d9a521" style="background:#d9a521" title="Kuning Madu" onclick="applyThemeFromAccent('#d9a521', this)"></button>
+            <button class="theme-swatch" data-color="#5f9f7a" style="background:#5f9f7a" title="Hijau Sage" onclick="applyThemeFromAccent('#5f9f7a', this)"></button>
+            <button class="theme-swatch" data-color="#2a9d8f" style="background:#2a9d8f" title="Hijau Tosca" onclick="applyThemeFromAccent('#2a9d8f', this)"></button>
+            <button class="theme-swatch" data-color="#3a8fd6" style="background:#3a8fd6" title="Biru Langit" onclick="applyThemeFromAccent('#3a8fd6', this)"></button>
+            <button class="theme-swatch" data-color="#1f3f94" style="background:#1f3f94" title="Biru Navy" onclick="applyThemeFromAccent('#1f3f94', this)"></button>
             <button class="theme-swatch" data-color="#7c6fc4" style="background:#7c6fc4" title="Ungu Lavender" onclick="applyThemeFromAccent('#7c6fc4', this)"></button>
-            <button class="theme-swatch" data-color="#d97757" style="background:#d97757" title="Peach Hangat" onclick="applyThemeFromAccent('#d97757', this)"></button>
-            <button class="theme-swatch" data-color="#5c6b73" style="background:#5c6b73" title="Abu Elegan" onclick="applyThemeFromAccent('#5c6b73', this)"></button>
-            <button class="theme-swatch" data-color="#8a1c2b" style="background:#8a1c2b" title="Merah Marun" onclick="applyThemeFromAccent('#8a1c2b', this)"></button>
-            <button class="theme-swatch" data-color="#c9971f" style="background:#c9971f" title="Kuning Mustard" onclick="applyThemeFromAccent('#c9971f', this)"></button>
-            <button class="theme-swatch" data-color="#0b3d91" style="background:#0b3d91" title="Navy Klasik" onclick="applyThemeFromAccent('#0b3d91', this)"></button>
             <label class="theme-custom-wrap" title="Warna kustom">
-                <input type="color" id="customColorInput" value="#0096c7" oninput="applyThemeFromAccent(this.value, null)">
+                <input type="color" id="customColorInput" value="#ffffff" oninput="applyThemeFromAccent(this.value, null)">
             </label>
         </div>
         <button class="fullscreen-btn" onclick="toggleFullScreen()" id="fsBtn">⛶</button>
@@ -602,7 +615,7 @@
 
     <!-- TAMPILAN DETAIL: SURAT IKP + TRANSKRIP + AUDIO (dibuka lewat klik "view" pada dokumen IKP) -->
     <div class="page" id="ikpView">
-        <div class="main-layout">
+        <div class="main-layout toc-collapsed">
             <!-- KOLOM KIRI: PDF ASLI -->
             <div class="pdf-container" id="pdfContainer">
                 <iframe src="about:blank" id="pdfFrame" title="Dokumen Pengadaan"
@@ -611,12 +624,40 @@
                     File "surat.pdf" tidak ditemukan di folder ini.<br>Letakkan surat.pdf di folder yang sama dengan index.html.
                 </div>
             </div>
+            <button class="toc-toggle" type="button" aria-label="Tampilkan daftar isi"
+                    aria-expanded="false" onclick="toggleTocPanel('ikpView', this)">«</button>
 
-            <!-- KOLOM KANAN: DAFTAR ISI IKP (audio-sync menyusul, belum ada audio lengkapnya) -->
+            <!-- KOLOM KANAN: DAFTAR ISI IKP DAN PEMBACA SUARA PER BAB/SUBBAB -->
             <div class="transcript-container" id="transcriptContainer">
                 <div class="transcript-header">
-                    <button class="resize-btn" onclick="adjustTranscriptFontSize(0.1)" title="Perbesar teks">+</button>
-                    <button class="resize-btn" onclick="adjustTranscriptFontSize(-0.1)" title="Perkecil teks">−</button>
+                    <button class="resize-btn" onclick="adjustTocWidth(40)" title="Lebarkan kotak">+</button>
+                    <button class="resize-btn" onclick="adjustTocWidth(-40)" title="Persempit kotak">−</button>
+                </div>
+                <div class="voice-panel">
+                    <button class="voice-panel-toggle" type="button" aria-expanded="false">
+                        <span class="voice-panel-label">▶ Audio per bab/subbab</span>
+                        <span class="voice-panel-summary">Pilih bagian untuk didengarkan</span>
+                        <span class="voice-panel-chevron" aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="voice-panel-body">
+                        <div class="voice-controls">
+                            <button class="voice-play-btn" type="button" aria-label="Putar atau jeda suara">▶</button>
+                            <input class="voice-seek-slider" type="range" min="0" value="0"
+                                   aria-label="Pindah bab atau subbab dan mulai membacakan">
+                            <select class="voice-speed" aria-label="Kecepatan suara">
+                                <option value="0.75">0.75×</option>
+                                <option value="1" selected>1×</option>
+                                <option value="1.25">1.25×</option>
+                                <option value="1.5">1.5×</option>
+                                <option value="2">2×</option>
+                            </select>
+                        </div>
+                        <div class="voice-seek-meta">
+                            <span class="voice-seek-count">1 / 0</span>
+                            <span class="voice-seek-title">Pilih bagian untuk didengarkan</span>
+                        </div>
+                        <span class="voice-seek-hint">Geser untuk memilih bab/subbab. Klik judul di bawah untuk langsung mendengarkan.</span>
+                    </div>
                 </div>
 
                 <p class="toc-title" id="toc-TITLE">INSTRUKSI KEPADA PESERTA (IKP) PENGADAAN BARANG DAN/ATAU JASA DI PT INTEGRASI AVIASI SOLUSI</p>
@@ -654,39 +695,11 @@
             </div>
         </div>
 
-        <!-- PLAYER (baca otomatis teks IKP, dari awal sampai akhir, gantiin audio.mp3) -->
-        <div class="audio-player-container">
-            <div class="player-controls">
-                <div class="play-btn" onclick="readers.ikp.togglePlay()" id="playBtn">
-                    <div id="btnIcon" class="icon-control"></div>
-                </div>
-                <div class="progress-box">
-                    <span class="time-text" id="readIndexLabel">0 / 0</span>
-                    <div class="progress-bar" id="readProgressBar"><div class="progress-fill" id="readProgressFill"></div></div>
-                    <span class="time-text section-label" id="readSectionLabel">Klik play atau pilih bagian</span>
-                </div>
-                <div class="visualizer-container" id="visualizer">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div>
-                </div>
-                <select class="speed-selector" id="speedSelector" onchange="readers.ikp.changeSpeed()">
-                    <option value="0.75">0.75x</option>
-                    <option value="1" selected>1x</option>
-                    <option value="1.25">1.25x</option>
-                    <option value="1.5">1.5x</option>
-                    <option value="2">2x</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="hint">
-        </div>
     </div>
 
     <!-- TAMPILAN DETAIL: KAK (RKST) + DAFTAR ISI + BACA OTOMATIS (dibuka lewat klik "view" pada dokumen KAK) -->
     <div class="page" id="kakView">
-        <div class="main-layout">
+        <div class="main-layout toc-collapsed">
             <!-- KOLOM KIRI: PDF ASLI -->
             <div class="pdf-container" id="pdfContainerKak">
                 <iframe src="about:blank" id="pdfFrameKak" title="Kerangka Acuan Kerja"
@@ -695,12 +708,40 @@
                     File "kak.pdf" tidak ditemukan di folder ini.<br>Letakkan kak.pdf di folder yang sama dengan index.html.
                 </div>
             </div>
+            <button class="toc-toggle" type="button" aria-label="Tampilkan daftar isi"
+                    aria-expanded="false" onclick="toggleTocPanel('kakView', this)">«</button>
 
             <!-- KOLOM KANAN: DAFTAR ISI KAK (klik bagian -> baca otomatis) -->
             <div class="transcript-container" id="transcriptContainerKak">
                 <div class="transcript-header">
-                    <button class="resize-btn" onclick="adjustTranscriptFontSize(0.1)" title="Perbesar teks">+</button>
-                    <button class="resize-btn" onclick="adjustTranscriptFontSize(-0.1)" title="Perkecil teks">−</button>
+                    <button class="resize-btn" onclick="adjustTocWidth(40)" title="Lebarkan kotak">+</button>
+                    <button class="resize-btn" onclick="adjustTocWidth(-40)" title="Persempit kotak">−</button>
+                </div>
+                <div class="voice-panel">
+                    <button class="voice-panel-toggle" type="button" aria-expanded="false">
+                        <span class="voice-panel-label">▶ Audio per bab/subbab</span>
+                        <span class="voice-panel-summary">Pilih bagian untuk didengarkan</span>
+                        <span class="voice-panel-chevron" aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="voice-panel-body">
+                        <div class="voice-controls">
+                            <button class="voice-play-btn" type="button" aria-label="Putar atau jeda suara">▶</button>
+                            <input class="voice-seek-slider" type="range" min="0" value="0"
+                                   aria-label="Pindah bab atau subbab dan mulai membacakan">
+                            <select class="voice-speed" aria-label="Kecepatan suara">
+                                <option value="0.75">0.75×</option>
+                                <option value="1" selected>1×</option>
+                                <option value="1.25">1.25×</option>
+                                <option value="1.5">1.5×</option>
+                                <option value="2">2×</option>
+                            </select>
+                        </div>
+                        <div class="voice-seek-meta">
+                            <span class="voice-seek-count">1 / 0</span>
+                            <span class="voice-seek-title">Pilih bagian untuk didengarkan</span>
+                        </div>
+                        <span class="voice-seek-hint">Geser untuk memilih bab/subbab. Klik judul di bawah untuk langsung mendengarkan.</span>
+                    </div>
                 </div>
 
                 <p class="toc-title" id="kak-TITLE">RENCANA KERJA DAN SYARAT-SYARAT TEKNIS (RKST) / KERANGKA ACUAN KERJA (KAK) PENGADAAN JASA PENYEDIAAN PERALATAN FASILITAS KEAMANAN PENERBANGAN DI LINGKUNGAN PT INTEGRASI AVIASI SOLUSI</p>
@@ -754,34 +795,6 @@
             </div>
         </div>
 
-        <!-- PLAYER (baca otomatis teks KAK, dari awal sampai akhir) -->
-        <div class="audio-player-container">
-            <div class="player-controls">
-                <div class="play-btn" onclick="readers.kak.togglePlay()">
-                    <div class="icon-control"></div>
-                </div>
-                <div class="progress-box">
-                    <span class="time-text">0 / 0</span>
-                    <div class="progress-bar"><div class="progress-fill"></div></div>
-                    <span class="time-text section-label">Klik play atau pilih bagian</span>
-                </div>
-                <div class="visualizer-container">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div>
-                </div>
-                <select class="speed-selector" onchange="readers.kak.changeSpeed()">
-                    <option value="0.75">0.75x</option>
-                    <option value="1" selected>1x</option>
-                    <option value="1.25">1.25x</option>
-                    <option value="1.5">1.5x</option>
-                    <option value="2">2x</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="hint">
-        </div>
     </div>
 
     <!-- HALAMAN 2: DAFTAR DOKUMEN PEMILIHAN -->
@@ -907,6 +920,7 @@ function goToPage(n){
     performPageSwitch(()=>{
         currentPage = n;
         inDetailView = false;
+        if(typeof startParticleAnimation === 'function') startParticleAnimation();
         document.getElementById('page1').classList.toggle('active', n === 1);
         document.getElementById('page2').classList.toggle('active', n === 2);
         document.getElementById('page3').classList.toggle('active', n === 3);
@@ -932,9 +946,20 @@ function enterDetailView(pageId){
         document.getElementById('navNext').style.display = 'none';
         document.getElementById('navPrev').style.display = 'flex';
         inDetailView = true;
+        if(typeof stopParticleAnimation === 'function') stopParticleAnimation(); // hemat tenaga pas baca PDF
     });
 }
 function backToDocList(){ goToPage(2); }
+
+function toggleTocPanel(viewId, button){
+    const view = document.getElementById(viewId);
+    if(!view) return;
+    const layout = view.querySelector('.main-layout');
+    const collapsed = layout.classList.toggle('toc-collapsed');
+    button.setAttribute('aria-expanded', String(!collapsed));
+    button.setAttribute('aria-label', collapsed ? 'Tampilkan daftar isi' : 'Sembunyikan daftar isi');
+    button.textContent = collapsed ? '«' : '»';
+}
 
 function showVideoFallback(){
     document.getElementById('introVideo').style.display = 'none';
@@ -1215,7 +1240,7 @@ function hslToHex(h,s,l){
 }
 
 let themeMode = 'light';
-let lastAccentHex = '#0096c7';
+let lastAccentHex = '#ffffff';
 
 function setThemeMode(mode){
     themeMode = mode;
@@ -1231,6 +1256,46 @@ function applyThemeFromAccent(hex, swatchEl){
     const root = document.documentElement.style;
     const accentSat = Math.max(s, 45);
     const dark = themeMode === 'dark';
+    const isWhite = (Math.max(r,g,b) - Math.min(r,g,b)) < 12 && Math.min(r,g,b) > 235;
+
+    if(isWhite){
+        if(!dark){
+            root.setProperty('--bg-mid',  '#ffffff');
+            root.setProperty('--bg-deep', '#e9ecef');
+            root.setProperty('--cyan',    '#2b2b2b');
+            root.setProperty('--text-strong', '#111111');
+            root.setProperty('--text-dim', 'rgba(17,17,17,0.62)');
+            root.setProperty('--active-bg', 'rgba(232,169,61,.22)');
+            root.setProperty('--active-text', '#6b4a06');
+            root.setProperty('--hint-color', '#c0392b');
+            root.setProperty('--card-bg', 'rgba(255,255,255,.72)');
+            root.setProperty('--toc-bg', 'rgba(255,255,255,.30)');
+            root.setProperty('--card-bg-solid', '#ffffff');
+            root.setProperty('--cyan-soft', 'rgba(0,0,0,0.25)');
+            root.setProperty('--accent-rgb', '0,0,0');
+            particleColorRGB = '110,110,110';
+        } else {
+            root.setProperty('--bg-mid',  '#1c1c1c');
+            root.setProperty('--bg-deep', '#000000');
+            root.setProperty('--cyan',    '#858585');
+            root.setProperty('--text-strong', '#f5f5f5');
+            root.setProperty('--text-dim', 'rgba(235,235,235,0.78)');
+            root.setProperty('--active-bg', 'rgba(255,214,102,.16)');
+            root.setProperty('--active-text', '#ffe9b3');
+            root.setProperty('--hint-color', '#ff9d9d');
+            root.setProperty('--card-bg', 'rgba(24,24,24,.6)');
+            root.setProperty('--toc-bg', 'rgba(10,10,10,.40)');
+            root.setProperty('--card-bg-solid', '#141414');
+            root.setProperty('--cyan-soft', 'rgba(255,255,255,0.28)');
+            root.setProperty('--accent-rgb', '255,255,255');
+            particleColorRGB = '255,255,255';
+        }
+        root.setProperty('--toc-halo', 'transparent');
+        document.querySelectorAll('.theme-swatch').forEach(el=>el.classList.remove('selected'));
+        if(swatchEl) swatchEl.classList.add('selected');
+        document.getElementById('customColorInput').value = '#ffffff';
+        return;
+    }
 
     if(!dark){
         root.setProperty('--bg-mid',  hslToHex(h, Math.min(accentSat*0.35, 35), 96));
@@ -1242,6 +1307,8 @@ function applyThemeFromAccent(hex, swatchEl){
         root.setProperty('--active-text', '#6b4a06');
         root.setProperty('--hint-color', '#c0392b');
         root.setProperty('--card-bg', 'rgba(255,255,255,.72)');
+        root.setProperty('--toc-bg', 'rgba(255,255,255,.30)');
+        root.setProperty('--toc-halo', 'transparent');
         root.setProperty('--card-bg-solid', '#ffffff');
         particleColorRGB = `${r},${g},${b}`;
     } else {
@@ -1254,10 +1321,13 @@ function applyThemeFromAccent(hex, swatchEl){
         root.setProperty('--active-text', '#ffe9b3');
         root.setProperty('--hint-color', '#ff9d9d');
         root.setProperty('--card-bg', 'rgba(20,26,40,.55)');
+        root.setProperty('--toc-bg', 'rgba(20,26,40,.35)');
+        root.setProperty('--toc-halo', 'transparent');
         root.setProperty('--card-bg-solid', hslToHex(h, 15, 14));
         particleColorRGB = `${r},${g},${b}`;
     }
     root.setProperty('--cyan-soft', `rgba(${r},${g},${b},0.35)`);
+    root.setProperty('--accent-rgb', `${r},${g},${b}`);
 
     document.querySelectorAll('.theme-swatch').forEach(el=>el.classList.remove('selected'));
     if(swatchEl) swatchEl.classList.add('selected');
@@ -1296,6 +1366,13 @@ function adjustQrBoxSize(deltaPx){
     const current = parseInt(getComputedStyle(root).getPropertyValue('--qr-box-width')) || 900;
     const next = Math.max(400, Math.min(1300, current + deltaPx));
     root.style.setProperty('--qr-box-width', next + 'px');
+}
+
+function adjustTocWidth(deltaPx){
+    const root = document.documentElement;
+    const current = parseInt(getComputedStyle(root).getPropertyValue('--toc-base')) || 360;
+    const next = Math.max(180, Math.min(800, current + deltaPx));
+    root.style.setProperty('--toc-base', next + 'px');
 }
 
 function adjustTranscriptFontSize(delta){
@@ -1430,21 +1507,32 @@ function makePronouncer(map){
 function createReader(cfg){
     const root = document.getElementById(cfg.viewId);
     const q = sel => root.querySelector(sel);
-    const btnIcon = q('.icon-control');
-    const speedSel = q('.speed-selector');
-    const idxLabel = q('.progress-box .time-text:not(.section-label)');
-    const secLabel = q('.section-label');
-    const fill = q('.progress-fill');
-    const bars = root.querySelectorAll('.visualizer-container .bar');
+    const seekSlider = q('.voice-seek-slider');
+    const seekCount = q('.voice-seek-count');
+    const seekTitle = q('.voice-seek-title');
+    const seekHint = q('.voice-seek-hint');
+    const seekSummary = q('.voice-panel-summary');
+    const voicePanel = q('.voice-panel');
+    const panelToggle = q('.voice-panel-toggle');
+    const playButton = q('.voice-play-btn');
+    const speedSelect = q('.voice-speed');
     const tocEls = root.querySelectorAll('.toc-title, .toc-section, .toc-sub, .toc-subsub');
     const say = makePronouncer(cfg.pronounce);
 
     let idx = -1, chunks = [], chunkIdx = 0;
-    let active = false, paused = false, rate = 1, token = 0, pdfPage = null;
+    let selectedIdx = 0, active = false, paused = false, rate = 1, token = 0, pdfPage = null;
 
-    function setPlayIcon(playing){
-        btnIcon.classList.toggle('playing', playing);
-        bars.forEach(b => b.style.animationPlayState = playing ? 'running' : 'paused');
+    function setPlayButton(playing){
+        playButton.textContent = playing ? '❚❚' : '▶';
+        playButton.setAttribute('aria-label', playing ? 'Jeda suara' : 'Putar atau lanjutkan suara');
+    }
+    function updateSelection(index){
+        selectedIdx = Math.max(0, Math.min(cfg.queue.length - 1, index));
+        const el = document.getElementById(cfg.queue[selectedIdx]);
+        seekSlider.value = selectedIdx;
+        seekCount.textContent = (selectedIdx + 1) + ' / ' + cfg.queue.length;
+        seekTitle.textContent = el ? el.textContent.trim() : '';
+        seekSummary.textContent = el ? el.textContent.trim() : 'Pilih bagian untuk didengarkan';
     }
     function highlight(id){
         tocEls.forEach(e => e.classList.remove('tts-speaking'));
@@ -1452,11 +1540,8 @@ function createReader(cfg){
         if(el){ el.classList.add('tts-speaking'); el.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
     }
     function updateProgress(){
-        const total = cfg.queue.length, pos = idx + 1;
-        idxLabel.textContent = pos + ' / ' + total;
-        fill.style.width = (pos / total * 100) + '%';
-        const el = document.getElementById(cfg.queue[idx]);
-        secLabel.textContent = el ? el.textContent.trim() : '';
+        updateSelection(idx);
+        seekHint.textContent = 'Geser untuk pindah bab/subbab, atau klik judul di bawah untuk mendengarkan.';
     }
     function jumpPdf(id){
         const page = cfg.pageMap[id];
@@ -1467,8 +1552,9 @@ function createReader(cfg){
     }
     function finish(){
         active = false; paused = false; token++;
-        setPlayIcon(false); highlight(null);
-        secLabel.textContent = 'Selesai — klik play untuk ulang dari awal';
+        setPlayButton(false);
+        highlight(null);
+        seekHint.textContent = 'Selesai dibacakan — geser untuk memilih bagian lain atau putar kembali.';
     }
     // siapkan bagian ke-i (lewati yang tidak punya teks); false kalau sudah habis
     function setup(i){
@@ -1491,12 +1577,14 @@ function createReader(cfg){
         u.lang = 'id-ID';
         if(idVoice) u.voice = idVoice;
         u.rate = rate;
-        u.onend = ()=>{ if(tk !== token || !active || paused) return; chunkIdx++; speakChunk(tk); };
+        u.onend = ()=>{ if(tk !== token || !active) return; chunkIdx++; speakChunk(tk); };
         u.onerror = (e)=>{
             if(tk !== token) return;
             if(e.error === 'canceled' || e.error === 'interrupted'){
-                // dibatalkan pihak lain (mis. suara hover): anggap pause, bisa dilanjut dengan play
-                if(active && !paused){ paused = true; setPlayIcon(false); }
+                active = false;
+                paused = false;
+                setPlayButton(false);
+                highlight(null);
                 return;
             }
             chunkIdx++; speakChunk(tk);   // error lain: lewati kalimat ini
@@ -1516,34 +1604,58 @@ function createReader(cfg){
             stopAllReaders(api);
             const i = cfg.queue.indexOf(id);
             if(i < 0) return;
+            voicePanel.classList.add('expanded');
+            panelToggle.setAttribute('aria-expanded', 'true');
             active = true; paused = false;
             if(!setup(i)) return;
-            setPlayIcon(true);
-            if(voicesChecked && !hasIdVoice) secLabel.textContent = 'Suara Indonesia tidak ditemukan di browser ini — pakai suara bawaan';
+            selectedIdx = i;
+            setPlayButton(true);
+            if(voicesChecked && !hasIdVoice){
+                seekHint.textContent = 'Suara Indonesia tidak ditemukan di browser ini — menggunakan suara bawaan.';
+            }
             kick();
         },
-        togglePlay(){
+        togglePlayback(){
             if(!SPEECH_OK){ alert('Browser ini tidak mendukung suara otomatis. Coba Chrome, Edge, atau Safari.'); return; }
-            if(active && !paused){            // jeda
+            if(active && !paused){
                 paused = true; token++;
                 window.speechSynthesis.cancel();
-                setPlayIcon(false);
-            } else if(active && paused){      // lanjut dari kalimat yang sama
-                stopAllReaders(api);
-                paused = false; setPlayIcon(true); kick();
-            } else {                          // mulai dari awal
-                api.start(cfg.queue[0]);
+                setPlayButton(false);
+                return;
             }
+            if(paused){
+                paused = false; active = true;
+                setPlayButton(true);
+                kick();
+                return;
+            }
+            api.start(cfg.queue[selectedIdx]);
         },
-        changeSpeed(){ rate = parseFloat(speedSel.value) || 1; },  // berlaku mulai kalimat berikutnya
+        changeSpeed(){ rate = parseFloat(speedSelect.value) || 1; },
         stop(){
-            if(!active && !paused) return;
+            if(!active) return;
             active = false; paused = false; token++;
-            setPlayIcon(false); highlight(null);
+            setPlayButton(false);
+            highlight(null);
         }
     };
     tocEls.forEach(el => el.addEventListener('click', ()=> api.start(el.id)));
-    setPlayIcon(false);
+    seekSlider.max = Math.max(0, cfg.queue.length - 1);
+    setPlayButton(false);
+    updateSelection(0);
+    panelToggle.addEventListener('click', ()=>{
+        const expanded = voicePanel.classList.toggle('expanded');
+        panelToggle.setAttribute('aria-expanded', String(expanded));
+    });
+    playButton.addEventListener('click', ()=> api.togglePlayback());
+    speedSelect.addEventListener('change', ()=> api.changeSpeed());
+    seekSlider.addEventListener('input', ()=>{
+        updateSelection(Number(seekSlider.value));
+    });
+    seekSlider.addEventListener('change', ()=>{
+        const id = cfg.queue[Number(seekSlider.value)];
+        if(id) api.start(id);
+    });
     return api;
 }
 
@@ -1703,6 +1815,9 @@ function toggleStopwatch(){
 // Efek stagger juga dipicu pas halaman pertama kali dibuka
 staggerActivePage();
 
+
+// Tema awal: Putih (mode gelap = Hitam)
+applyThemeFromAccent('#ffffff', document.querySelector('.theme-swatch.swatch-white'));
 </script>
 </body>
 </html>
