@@ -198,32 +198,12 @@
     }
 
     .voice-panel{ flex-shrink:0; border:0; background:transparent; }
-    .voice-panel.expanded{
-        background:rgba(255,255,255,.42);
-        box-shadow:0 5px 16px rgba(15,37,68,.08);
-    }
-    .voice-panel-toggle{
-        width:100%; min-height:38px; padding:8px 11px; border:0;
-        display:flex; align-items:center; justify-content:space-between; gap:10px;
-        color:var(--text-strong); background:transparent; cursor:pointer; text-align:left;
-    }
-    .voice-panel-toggle:hover{ background:rgba(var(--accent-rgb),.06); }
-    .voice-panel-label{ font-size:12px; font-weight:700; }
-    .voice-panel-summary{
-        min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-        color:var(--text-dim); font-size:11px;
-    }
-    .voice-panel-chevron{ flex-shrink:0; font-size:14px; transition:transform .2s ease; }
-    .voice-panel.expanded .voice-panel-chevron{ transform:rotate(180deg); }
-    .voice-panel-body{
-        display:none; padding:0 12px 11px; flex-direction:column; gap:8px;
-    }
-    .voice-panel.expanded .voice-panel-body{ display:flex; }
-    .voice-controls{ display:flex; align-items:center; gap:9px; min-width:0; }
+    .voice-panel-body{ display:flex; padding:0; flex-direction:column; gap:6px; }
+    .voice-controls{ display:flex; align-items:center; gap:10px; min-width:0; }
     .voice-play-btn{
-        width:32px; height:32px; flex-shrink:0; border:1px solid var(--cyan-soft);
-        border-radius:50%; background:rgba(255,255,255,.12); color:var(--text-strong);
-        font-size:13px; cursor:pointer;
+        width:42px; height:42px; flex-shrink:0; border:1px solid var(--cyan-soft);
+        border-radius:50%; background:rgba(255,255,255,.22); color:var(--text-strong);
+        font-size:16px; cursor:pointer;
     }
     .voice-play-btn:hover{ background:var(--cyan); color:#fff; }
     .voice-speed{
@@ -231,9 +211,10 @@
         border-radius:8px; background:rgba(255,255,255,.12); color:var(--text-strong);
         font-size:11px;
     }
+    .voice-controls .voice-seek-slider{ flex:1; min-width:30px; margin:0; }
     .voice-seek-meta{
-        display:flex; align-items:center; justify-content:space-between; gap:12px;
-        min-width:0; font-size:12px; color:var(--text-dim);
+        display:flex; align-items:center; gap:10px; min-width:0;
+        font-size:12px; color:var(--text-dim);
     }
     .voice-seek-count{ flex-shrink:0; font-family:monospace; }
     .voice-seek-title{
@@ -241,9 +222,9 @@
         color:var(--text-strong); font-weight:600;
     }
     .voice-seek-slider{
-        width:100%; height:4px; margin:2px 0; border-radius:99px;
+        width:100%; height:4px; margin:0; border-radius:99px;
         background:rgba(15,37,68,.16); cursor:pointer; accent-color:var(--cyan);
-        opacity:.62;
+        opacity:.7;
     }
     .voice-seek-slider:hover, .voice-seek-slider:focus-visible{ opacity:1; }
     .voice-seek-slider::-webkit-slider-thumb{
@@ -255,8 +236,6 @@
         width:10px; height:10px; border:2px solid rgba(255,255,255,.85);
         border-radius:50%; background:var(--cyan); box-shadow:0 1px 5px rgba(15,37,68,.25);
     }
-    .voice-seek-hint{ font-size:11px; color:var(--text-dim); line-height:1.35; }
-
     .theme-picker{
         display:flex; align-items:center; gap:8px;
         background:var(--card-bg);
@@ -634,11 +613,6 @@
                     <button class="resize-btn" onclick="adjustTocWidth(-40)" title="Persempit kotak">−</button>
                 </div>
                 <div class="voice-panel">
-                    <button class="voice-panel-toggle" type="button" aria-expanded="false">
-                        <span class="voice-panel-label">▶ Audio per bab/subbab</span>
-                        <span class="voice-panel-summary">Pilih bagian untuk didengarkan</span>
-                        <span class="voice-panel-chevron" aria-hidden="true">⌄</span>
-                    </button>
                     <div class="voice-panel-body">
                         <div class="voice-controls">
                             <button class="voice-play-btn" type="button" aria-label="Putar atau jeda suara">▶</button>
@@ -656,7 +630,6 @@
                             <span class="voice-seek-count">1 / 0</span>
                             <span class="voice-seek-title">Pilih bagian untuk didengarkan</span>
                         </div>
-                        <span class="voice-seek-hint">Geser untuk memilih bab/subbab. Klik judul di bawah untuk langsung mendengarkan.</span>
                     </div>
                 </div>
 
@@ -718,11 +691,6 @@
                     <button class="resize-btn" onclick="adjustTocWidth(-40)" title="Persempit kotak">−</button>
                 </div>
                 <div class="voice-panel">
-                    <button class="voice-panel-toggle" type="button" aria-expanded="false">
-                        <span class="voice-panel-label">▶ Audio per bab/subbab</span>
-                        <span class="voice-panel-summary">Pilih bagian untuk didengarkan</span>
-                        <span class="voice-panel-chevron" aria-hidden="true">⌄</span>
-                    </button>
                     <div class="voice-panel-body">
                         <div class="voice-controls">
                             <button class="voice-play-btn" type="button" aria-label="Putar atau jeda suara">▶</button>
@@ -740,7 +708,6 @@
                             <span class="voice-seek-count">1 / 0</span>
                             <span class="voice-seek-title">Pilih bagian untuk didengarkan</span>
                         </div>
-                        <span class="voice-seek-hint">Geser untuk memilih bab/subbab. Klik judul di bawah untuk langsung mendengarkan.</span>
                     </div>
                 </div>
 
@@ -1455,14 +1422,12 @@ fetch('surat.pdf', {method:'HEAD'}).then(r=>{ if(!r.ok) showPdfFallback(); }).ca
    - Suara dipilih otomatis (id-ID) dan ada peringatan kalau nggak ada.
 */
 const SPEECH_OK = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
-let idVoice = null, voicesChecked = false, hasIdVoice = false;
+let idVoice = null;
 function pickIndonesianVoice(){
     if(!SPEECH_OK) return;
     const vs = window.speechSynthesis.getVoices();
     if(!vs.length) return;
-    voicesChecked = true;
     const ids = vs.filter(v => /^id([-_]|$)/i.test(v.lang));
-    hasIdVoice = ids.length > 0;
     // Suara perempuan Indonesia (Edge: Gadis, Chrome/Android: Google Bahasa Indonesia, Mac: Damayanti).
     // Dipakai sama persis oleh IKP dan KAK. Kalau tidak ada yang cocok, biarkan suara bawaan browser.
     const female = ids.filter(v => /gadis|damayanti|google|female|perempuan|wanita/i.test(v.name));
@@ -1510,10 +1475,6 @@ function createReader(cfg){
     const seekSlider = q('.voice-seek-slider');
     const seekCount = q('.voice-seek-count');
     const seekTitle = q('.voice-seek-title');
-    const seekHint = q('.voice-seek-hint');
-    const seekSummary = q('.voice-panel-summary');
-    const voicePanel = q('.voice-panel');
-    const panelToggle = q('.voice-panel-toggle');
     const playButton = q('.voice-play-btn');
     const speedSelect = q('.voice-speed');
     const tocEls = root.querySelectorAll('.toc-title, .toc-section, .toc-sub, .toc-subsub');
@@ -1532,7 +1493,6 @@ function createReader(cfg){
         seekSlider.value = selectedIdx;
         seekCount.textContent = (selectedIdx + 1) + ' / ' + cfg.queue.length;
         seekTitle.textContent = el ? el.textContent.trim() : '';
-        seekSummary.textContent = el ? el.textContent.trim() : 'Pilih bagian untuk didengarkan';
     }
     function highlight(id){
         tocEls.forEach(e => e.classList.remove('tts-speaking'));
@@ -1541,7 +1501,6 @@ function createReader(cfg){
     }
     function updateProgress(){
         updateSelection(idx);
-        seekHint.textContent = 'Geser untuk pindah bab/subbab, atau klik judul di bawah untuk mendengarkan.';
     }
     function jumpPdf(id){
         const page = cfg.pageMap[id];
@@ -1554,7 +1513,6 @@ function createReader(cfg){
         active = false; paused = false; token++;
         setPlayButton(false);
         highlight(null);
-        seekHint.textContent = 'Selesai dibacakan — geser untuk memilih bagian lain atau putar kembali.';
     }
     // siapkan bagian ke-i (lewati yang tidak punya teks); false kalau sudah habis
     function setup(i){
@@ -1604,15 +1562,10 @@ function createReader(cfg){
             stopAllReaders(api);
             const i = cfg.queue.indexOf(id);
             if(i < 0) return;
-            voicePanel.classList.add('expanded');
-            panelToggle.setAttribute('aria-expanded', 'true');
             active = true; paused = false;
             if(!setup(i)) return;
             selectedIdx = i;
             setPlayButton(true);
-            if(voicesChecked && !hasIdVoice){
-                seekHint.textContent = 'Suara Indonesia tidak ditemukan di browser ini — menggunakan suara bawaan.';
-            }
             kick();
         },
         togglePlayback(){
@@ -1643,10 +1596,6 @@ function createReader(cfg){
     seekSlider.max = Math.max(0, cfg.queue.length - 1);
     setPlayButton(false);
     updateSelection(0);
-    panelToggle.addEventListener('click', ()=>{
-        const expanded = voicePanel.classList.toggle('expanded');
-        panelToggle.setAttribute('aria-expanded', String(expanded));
-    });
     playButton.addEventListener('click', ()=> api.togglePlayback());
     speedSelect.addEventListener('change', ()=> api.changeSpeed());
     seekSlider.addEventListener('input', ()=>{
